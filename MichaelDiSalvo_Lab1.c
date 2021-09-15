@@ -37,7 +37,9 @@ int main()
 
 int ProcessTokens(char*** argv2, int physicalSize)
 {
+	// create our temporary argv array and token string, get starting token physical size, and set initial tokenSize and token number to 0 
 	char ** argv = (char **) malloc(sizeof(void *) * physicalSize); 
+	argv[0] = NULL;
 	int tokenPhysicalSize = 10;
 	char* token = (char *) malloc(sizeof(char)*tokenPhysicalSize);
 	token[0] = '\0';
@@ -47,68 +49,87 @@ int ProcessTokens(char*** argv2, int physicalSize)
 	char ch = (char) getchar();
 	while (ch != '\n')
 	{
-		//printf("found %c with token size: %d, token Number: %d \n", ch, tokenSize, tokenNumber);
-		if (ch == ' ' && tokenSize > 0)
+		// if we found a space 
+		if (ch == ' ')
 		{
-			argv[tokenNumber] = (char *) malloc(sizeof(char)*tokenPhysicalSize);
-			strcpy(argv[tokenNumber], token);
-			tokenSize = 0;
-			tokenNumber += 1;
-			token[0] = '\0';
-
-			if (tokenNumber + 1 == tokenPhysicalSize)
+			// if token is not empty, we found a valid token, add it to argv and reset/update values
+			if (tokenSize > 0)
 			{
-				ReallocArgv(&argv, &physicalSize);
+				// allocate memory in argv
+				argv[tokenNumber] = (char *) malloc(sizeof(char)*tokenPhysicalSize);
+				// copy contents to newly allocated space 
+				strcpy(argv[tokenNumber], token);
+				// reset token size and null terminator, incrememnt token number, and  
+				tokenSize = 0;
+				tokenNumber++;
+				token[0] = '\0';
+				// update the null terminator for the array of strings  
+				argv[tokenNumber] = NULL;
+				
+				// check if there are less then 2 spots left in argv, if so then re-allocate memory  
+				if (tokenNumber + 1 == tokenPhysicalSize)
+				{
+					ReallocArgv(&argv, &physicalSize);
+				}
 			}
-
+			// if token size is 0, then we just found an extra white space so skip it
+			else
+			{
+				ch = (char) getchar();
+				continue;
+			}
 		}
-		else if (ch == ' ' && tokenSize == 0)
-		{
-			ch = (char) getchar();
-			continue; 	
-		}
+		// if we ch is not a newline or space chatacter, add it to token string 
 		else
 		{
+			// add character, update null terminator, and increment size 
 			token[tokenSize] = ch;
 			token[tokenSize + 1] = '\0';
 			tokenSize++;
-
+			// if we have less than 2 spaces left in the string, reallocate memory for it 
 			if (tokenSize + 2 == physicalSize)
 			{
-				printf("reached max length of token\n");
 				ReallocToken(&token, &tokenPhysicalSize);
 			}
 		}
+		// always get next character while we haven't seen a newline 
 		ch = (char) getchar();
 	}
-
+	// if we have found a newline character, we must process the argv so it can be returned 
 	if (ch == '\n')
 	{
+		// if we currently have a token that has not yet been added to argv 
 		if (tokenSize > 0)
 		{
-			argv[tokenNumber] = (char *) malloc(sizeof(char)*10);
+			// add token to argv
+			argv[tokenNumber] = (char *) malloc(sizeof(char)*tokenPhysicalSize);
 			strcpy(argv[tokenNumber], token);
-			tokenSize = 0;
+			argv[tokenNumber + 1] = NULL;
 			tokenNumber++;
-			argv[tokenNumber] = NULL;
-			token[0] = '\0';
-		}
-		// check if the exit string was the only token entered
-		if (tokenNumber == 1 && strcmp(argv[0], exitString) == 0)
-		{
-			// return false
-			printf("%d\n", tokenNumber);
-			argv[tokenNumber] = NULL;
-			free(token);
+			// then assign to output argv
 			*argv2 = argv;
-			return 0;
+			free(token);
+			// case where exit had been typed but not yet registered 
+			if (strcmp(argv[0], exitString) == 0 && argv[1] == NULL)
+			{
+				return 0; 
+			}
+			return 1;
 		}
-
+		// case were only exit was typed and it has been registered already as token
+		else if (strcmp(argv[0], exitString) == 0 && tokenNumber == 1 && argv[1] == NULL)
+		{
+			*argv2 = argv;
+			free(token);
+			return 0; 
+		}
+		else 
+		{
+			*argv2 = argv;
+			free(token);
+			return 1; 
+		}
 	}
-	argv[tokenNumber + 1] = NULL;
-	free(token);
-	*argv2 = argv;
-	return 1; 
 }
 
 void ReallocToken(char **array, int *physicalSize)
