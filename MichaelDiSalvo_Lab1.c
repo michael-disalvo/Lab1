@@ -23,8 +23,7 @@ int main()
 		int i = 0;
 		while(ptr != NULL)
 		{
-			
-			printf("argv[%d]: %s\n", i, ptr);
+			printf("argv[%d]: %s \n", i, ptr, strlen(ptr));
 			i++;
 			ptr = argv[i];
 		}
@@ -67,7 +66,7 @@ int ProcessTokens(char*** argv2, int physicalSize)
 				argv[tokenNumber] = NULL;
 				
 				// check if there are less then 2 spots left in argv, if so then re-allocate memory  
-				if (tokenNumber + 1 == tokenPhysicalSize)
+				if (tokenNumber + 1 == physicalSize)
 				{
 					ReallocArgv(&argv, &physicalSize);
 				}
@@ -87,7 +86,7 @@ int ProcessTokens(char*** argv2, int physicalSize)
 			token[tokenSize + 1] = '\0';
 			tokenSize++;
 			// if we have less than 2 spaces left in the string, reallocate memory for it 
-			if (tokenSize + 2 == physicalSize)
+			if (tokenSize + 2 == tokenPhysicalSize)
 			{
 				ReallocToken(&token, &tokenPhysicalSize);
 			}
@@ -117,7 +116,7 @@ int ProcessTokens(char*** argv2, int physicalSize)
 			return 1;
 		}
 		// case were only exit was typed and it has been registered already as token
-		else if (strcmp(argv[0], exitString) == 0 && tokenNumber == 1 && argv[1] == NULL)
+		else if (tokenNumber == 1 && strcmp(argv[0], exitString) == 0 && argv[1] == NULL)
 		{
 			*argv2 = argv;
 			free(token);
